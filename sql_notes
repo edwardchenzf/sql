@@ -1,3 +1,4 @@
+# examples are from: https://leetcode.com/problemset/database/
 # select second highest salary
 solution 1:
 SELECT CASE WHEN MIN(a.Salary)=MAX(a.Salary) THEN null  ELSE MIN(a.Salary) END AS SecondHighestSalary FROM 
@@ -114,3 +115,51 @@ WHERE
         )
 ;
 
+# Delete Duplicate Emails and only keep the Email with smaller Id
+
+DELETE p2
+FROM Person p1 INNER JOIN Person p2
+WHERE p1.Id<p2.Id AND p1.Email=p2.Email 
+
+
+# Rising Temperature: Given a Weather table, write a SQL query to find all dates' Ids with higher temperature compared to its previous (yesterday's) dates.
+
+SELECT w1.Id FROM
+Weather w1, Weather w2
+WHERE DATEDIFF(w1.RecordDate,w2.RecordDate) =1 AND w1.Temperature>w2.Temperature
+
+# Update table by swapping the sex value
+
+UPDATE salary
+SET sex = (CASE WHEN sex='m' THEN 'f' ELSE 'm' END)
+
+# Exchange seats
+
+SELECT 
+	Case When id in (SELECT max(id) as id from seat ) and id%2=1 then id
+			 When id % 2=0 Then id-1
+			 When id % 2 =1 Then id +1
+  End as id, student
+FROM seat 
+Order By id ASC
+
+# Human Traffic of Stadium: three consecutive rows with number greater than 100
+
+SELECT s1.* FROM stadium AS s1, stadium AS s2, stadium as s3
+    WHERE 
+    ((s1.id + 1 = s2.id
+    AND s1.id + 2 = s3.id)
+    OR 
+    (s1.id - 1 = s2.id
+    AND s1.id + 1 = s3.id)
+    OR
+    (s1.id - 2 = s2.id
+    AND s1.id - 1 = s3.id)
+    )
+    AND s1.people>=100 
+    AND s2.people>=100
+    AND s3.people>=100
+
+    GROUP BY s1.id
+
+    
