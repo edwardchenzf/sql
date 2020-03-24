@@ -1,0 +1,116 @@
+# select second highest salary
+solution 1:
+SELECT CASE WHEN MIN(a.Salary)=MAX(a.Salary) THEN null  ELSE MIN(a.Salary) END AS SecondHighestSalary FROM 
+(SELECT Employee.Salary FROM Employee ORDER BY Employee.Salary DESC LIMIT 2) a
+
+solution 2:
+SELECT max(Salary) as SecondHighestSalary
+FROM Employee
+WHERE Salary < (SELECT max(Salary) FROM Employee)
+
+solution 3:
+SELECT
+    (SELECT DISTINCT
+            Salary
+        FROM
+            Employee
+        ORDER BY Salary DESC
+        LIMIT 1 OFFSET 1) AS SecondHighestSalary
+
+# Nth Highest Salary
+solution 1:
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+  RETURN (
+      # Write your MySQL query statement below.
+      SELECT 
+        CASE WHEN COUNT(a.Salary)<N THEN null  
+        ELSE MIN(a.Salary) END 
+      FROM 
+        (SELECT DISTINCT Employee.Salary FROM Employee ORDER BY Employee.Salary DESC LIMIT N) a
+  );
+END
+
+solution 2:
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+    set n = n - 1;
+  RETURN (
+      # Write your MySQL query statement below.
+      select distinct Salary from Employee order by Salary desc limit 1 offset n
+  );
+END
+
+# rank scores
+solution 1: (prev and next are keywords, indicating the previous or next row of record)
+SELECT
+  Score,
+  @rank := @rank + (@prev <> (@prev := Score)) Rank
+FROM
+  Scores,
+  (SELECT @rank := 0, @prev := -1) init
+ORDER BY Score desc
+
+solution 2:
+select Score, DENSE_RANK() OVER (ORDER BY Score Desc) Rank from Scores
+
+# Consecutive Numbers: Write a SQL query to find all numbers that appear at least three times consecutively.
+
+select distinct ConsecutiveNums from (
+    select 
+        Num as ConsecutiveNums,
+        Case 
+            When @prev = Num Then @count := @count + 1 Else @count := 1
+        End as count,
+        @prev := Num
+        from (
+            select @prev := null, @count := null
+        ) as pre, Logs l) Consecutive
+where count >= 3
+
+# return duplicates
+
+select email
+from 
+(select email,count(id)as email_count from person
+group by email
+having count(email)>1)t
+
+# customers who never order
+
+solution 1:
+SELECT a.Name AS Customers
+FROM
+(SELECT c.Name AS Name,o.CustomerId AS CustomerId
+FROM Customers c LEFT JOIN Orders o
+ON c.Id=o.CustomerId) a
+WHERE a.CustomerId IS NULL
+
+solution 2 (better):
+select Customers.Name as 'Customers'
+from Customers
+where Customers.Id not in (
+    select Orders.CustomerID
+    from Orders
+)
+
+
+# Department Top Three Salaries
+
+SELECT
+    d.Name AS 'Department', e1.Name AS 'Employee', e1.Salary
+FROM
+    Employee e1
+        JOIN
+    Department d ON e1.DepartmentId = d.Id
+WHERE
+    3 > (SELECT
+            COUNT(DISTINCT e2.Salary)
+        FROM
+            Employee e2
+        WHERE
+            e2.Salary > e1.Salary
+                AND e1.DepartmentId = e2.DepartmentId
+        )
+;
+
